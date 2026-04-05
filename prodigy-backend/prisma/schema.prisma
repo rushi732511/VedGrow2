@@ -1,0 +1,227 @@
+// Tells Prisma which database we're using and where the client goes
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Users (Applicants) ───────────────────────────────────────────────────────
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  fullName  String
+  phone     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  applications Application[]
+  certificates Certificate[]
+
+  @@index([email])
+  @@index([createdAt(sort: Desc)])
+  @@map("users")
+}
+
+// ─── Internship Tracks ────────────────────────────────────────────────────────
+model Track {
+  id           String   @id @default(uuid())
+  name         String   @unique
+  slug         String   @unique
+  description  String?
+  curriculum   Json?
+  durationDays Int      @default(30)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  // Relations
+  batches      Batch[]
+  applications Application[]
+  certificates Certificate[]
+
+  @@index([slug])
+  @@map("tracks")
+}
+
+// ─── Batches ──────────────────────────────────────────────────────────────────
+model Batch {
+  id           String      @id @default(uuid())
+  trackId      String
+  startDate    DateTime
+  endDate      DateTime
+  status       BatchStatus @default(OPEN)
+  capacity     Int         @default(100)
+  currentCount Int         @default(0)
+  createdAt    DateTime    @default(now())
+
+  // Relations
+  track        Track         @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  applications Application[]
+
+  @@index([trackId])
+  @@index([startDate])
+  @@index([status])
+  @@map("batches")
+}
+
+// ─── Applications ─────────────────────────────────────────────────────────────
+model Application {
+  id      String @id @default(uuid())
+  userId  String
+  trackId String
+  batchId String?
+
+  // Payment
+  paymentStatus  PaymentStatus @default(PENDING)
+  paymentAmount  Int           @default(12900) // in paise (₹129.00)
+  paymentId      String?
+  paymentOrderId String?
+  paidAt         DateTime?
+
+  // Workflow
+  offerLetterSentAt  DateTime?
+  taskFormSentAt     DateTime?
+  taskSubmittedAt    DateTime?
+  taskSubmissionData Json?
+
+  // Metadata
+  applicationMonth DateTime
+  status           ApplicationStatus @default(SUBMITTED)
+  notes            String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  // Relations
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  track       Track        @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  batch       Batch?       @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  certificate Certificate?
+
+  // One application per user per month
+  @@unique([userId, applicationMonth])
+  @@index([userId])
+  @@index([batchId])
+  @@index([paymentStatus])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@map("applications")
+}
+
+// ─── Certificates ─────────────────────────────────────────────────────────────
+model Certificate {
+  id            String   @id @default(uuid())
+  cin           String   @unique // e.g., PI-250201-A3K9Q
+  applicationId String   @unique
+  userId        String
+  trackId       String
+
+  issuedDate      DateTime
+  isActivated     Boolean  @default(false)
+  certificateUrl  String?
+
+  verifiedCount  Int       @default(0)
+  lastVerifiedAt DateTime?
+  createdAt      DateTime  @default(now())
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  track       Track       @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@index([cin])
+  @@index([userId])
+  @@index([issuedDate(sort: Desc)])
+  @@map("certificates")
+}
+
+// ─── Email Logs ───────────────────────────────────────────────────────────────
+model EmailLog {
+  id               String      @id @default(uuid())
+  recipientEmail   String
+  templateName     String
+  subject          String?
+  status           EmailStatus @default(QUEUED)
+  sendgridMessageId String?
+  errorMessage     String?
+  metadata         Json?
+  sentAt           DateTime?
+  createdAt        DateTime    @default(now())
+
+  @@index([recipientEmail])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@map("email_logs")
+}
+
+// ─── Admin Users ──────────────────────────────────────────────────────────────
+model AdminUser {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  fullName     String
+  role         AdminRole @default(ADMIN)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+
+  resolvedContacts ContactSubmission[]
+
+  @@index([email])
+  @@map("admin_users")
+}
+
+// ─── Contact Submissions ──────────────────────────────────────────────────────
+model ContactSubmission {
+  id         String    @id @default(uuid())
+  fullName   String
+  email      String
+  phone      String?
+  message    String
+  isResolved Boolean   @default(false)
+  resolvedBy String?
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  resolver AdminUser? @relation(fields: [resolvedBy], references: [id])
+
+  @@index([isResolved])
+  @@index([createdAt(sort: Desc)])
+  @@map("contact_submissions")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+enum BatchStatus {
+  OPEN
+  ACTIVE
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  PAYMENT_PENDING
+  ENROLLED
+  COMPLETED
+  WITHDRAWN
+}
+
+enum EmailStatus {
+  QUEUED
+  SENT
+  FAILED
+  BOUNCED
+}
+
+enum AdminRole {
+  ADMIN
+  SUPER_ADMIN
+}

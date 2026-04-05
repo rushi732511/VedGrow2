@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Compiled output
+dist/
+
+# Environment variables — NEVER commit this
+.env
+
+# Prisma
+prisma/*.db
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
