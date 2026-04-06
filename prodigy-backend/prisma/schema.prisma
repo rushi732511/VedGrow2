@@ -39,6 +39,7 @@ model Track {
   id           String   @id @default(uuid())
   name         String   @unique
   slug         String   @unique
+  code         String   @unique // Short code e.g. WD, ML, DS
   description  String?
   curriculum   Json?
   durationDays Int      @default(30)
@@ -125,7 +126,7 @@ model Application {
 // ─── Certificates ─────────────────────────────────────────────────────────────
 model Certificate {
   id            String   @id @default(uuid())
-  cin           String   @unique // e.g., PI-250201-A3K9Q
+  cin           String   @unique // e.g., PIT/JAN26/00820
   applicationId String   @unique
   userId        String
   trackId       String

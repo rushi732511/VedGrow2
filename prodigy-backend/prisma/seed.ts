@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+import process  from 'node:process';
 import { hashSync } from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -8,6 +10,7 @@ const tracks = [
     {
         name: 'Software Development',
         slug: 'software-development',
+        code: 'SD',
         description: 'Build real-world software applications using industry-standard tools and practices.',
         curriculum: [
             'Introduction to Software Engineering',
@@ -24,6 +27,7 @@ const tracks = [
     {
         name: 'Web Development',
         slug: 'web-development',
+        code: 'WD',
         description: 'Learn to build modern, responsive websites using HTML, CSS, and JavaScript.',
         curriculum: [
             'HTML5 & Semantic Markup',
@@ -40,6 +44,7 @@ const tracks = [
     {
         name: 'Full Stack Development',
         slug: 'full-stack-development',
+        code: 'FS',
         description: 'Master both frontend and backend development to build complete web applications.',
         curriculum: [
             'Frontend: React + TypeScript',
@@ -56,6 +61,7 @@ const tracks = [
     {
         name: 'Machine Learning',
         slug: 'machine-learning',
+        code: 'ML',
         description: 'Understand and apply machine learning algorithms to real-world datasets.',
         curriculum: [
             'Python for Data Science',
@@ -72,6 +78,7 @@ const tracks = [
     {
         name: 'Data Science',
         slug: 'data-science',
+        code: 'DS',
         description: 'Extract insights from data using statistical analysis and visualization techniques.',
         curriculum: [
             'Data Collection & Cleaning',
@@ -88,6 +95,7 @@ const tracks = [
     {
         name: 'Generative AI',
         slug: 'generative-ai',
+        code: 'AI',
         description: 'Explore large language models, prompt engineering, and AI application development.',
         curriculum: [
             'Introduction to Generative AI',
@@ -104,6 +112,7 @@ const tracks = [
     {
         name: 'Software Testing',
         slug: 'software-testing',
+        code: 'ST',
         description: 'Learn manual and automated testing techniques to ensure software quality.',
         curriculum: [
             'Testing Fundamentals',
@@ -120,6 +129,7 @@ const tracks = [
     {
         name: 'Cyber Security',
         slug: 'cyber-security',
+        code: 'CS',
         description: 'Understand threats, vulnerabilities, and how to defend systems against attacks.',
         curriculum: [
             'Cybersecurity Fundamentals',
@@ -136,6 +146,7 @@ const tracks = [
     {
         name: 'Android Development',
         slug: 'android-development',
+        code: 'AD',
         description: 'Build native Android applications using Kotlin and Android Studio.',
         curriculum: [
             'Kotlin Fundamentals',
@@ -162,6 +173,7 @@ async function main() {
             where: { slug: track.slug },
             update: {
                 name: track.name,
+                code: track.code,
                 description: track.description,
                 curriculum: track.curriculum,
                 durationDays: track.durationDays,

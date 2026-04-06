@@ -10,46 +10,56 @@ import { env } from '../config/env';
 // YYMMDD = issue date (e.g., 250201 for Feb 1 2025)
 // XXXXX  = 5 character alphanumeric (uppercase, collision-resistant)
 
-const CIN_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-// Removed: I, O, 0, 1 — visually ambiguous characters
+// ─── CIN Generation ───────────────────────────────────────────────────────────
+// Format: PIT/MMMYY/NNNNN
+// PIT    = Prodigy InfoTech
+// MMMYY  = Month + Year (e.g., JAN26, FEB26)
+// NNNNN  = 5-digit zero-padded sequential number (e.g., 00001, 00820)
+//
+// Example: PIT/JAN26/00820
 
-function generateRandomSuffix(length: number = 5): string {
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += CIN_CHARS[Math.floor(Math.random() * CIN_CHARS.length)];
-    }
-    return result;
+const MONTHS = [
+    'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+    'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
+];
+
+function formatMonthYear(date: Date): string {
+    const month = MONTHS[date.getUTCMonth()];          // "JAN"
+    const year = String(date.getUTCFullYear()).slice(2); // "26"
+    return `${month}${year}`;                           // "JAN26"
 }
 
-function formatDatePart(date: Date): string {
-    const yy = String(date.getUTCFullYear()).slice(2); // "2025" → "25"
-    const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const dd = String(date.getUTCDate()).padStart(2, '0');
-    return `${yy}${mm}${dd}`; // "250201"
-}
+// Generates the next sequential CIN for the current month.
+// Uses a transaction to safely count existing certificates this month
+// and increment — no two certificates ever get the same number.
+// trackCode = e.g. "WD", "ML", "DS"
+async function generateSequentialCIN(
+    issuedDate: Date,
+    trackCode: string
+): Promise<string> {
+    const monthYear = formatMonthYear(issuedDate);
 
-// Generates a unique CIN, retrying on collision (max 5 attempts)
-async function generateUniqueCIN(issuedDate: Date): Promise<string> {
-    const datePart = formatDatePart(issuedDate);
-    const maxAttempts = 5;
+    // Format: PIT/WD/JAN26/00001
+    const prefix = `PIT/${trackCode.toUpperCase()}/${monthYear}/`;
 
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        const cin = `PI-${datePart}-${generateRandomSuffix()}`;
+    // Count certificates for this track + month combination
+    const existingCount = await prisma.certificate.count({
+        where: {
+            cin: { startsWith: prefix },
+        },
+    });
 
-        // Check if this CIN already exists
-        const existing = await prisma.certificate.findUnique({ where: { cin } });
-        if (!existing) {
-            return cin; // Unique — use it
-        }
+    const sequenceNumber = String(existingCount + 1).padStart(5, '0');
+    const cin = `${prefix}${sequenceNumber}`;
 
-        logger.warn(`CIN collision on attempt ${attempt}`, { cin });
+    // Collision safety check
+    const collision = await prisma.certificate.findUnique({ where: { cin } });
+    if (collision) {
+        const fallback = String(existingCount + 2).padStart(5, '0');
+        return `${prefix}${fallback}`;
     }
 
-    throw new AppError(
-        'CIN_GENERATION_FAILED',
-        'Failed to generate a unique certificate ID. Please try again.',
-        500
-    );
+    return cin;
 }
 
 // ─── generateCertificate ──────────────────────────────────────────────────────
@@ -57,12 +67,13 @@ async function generateUniqueCIN(issuedDate: Date): Promise<string> {
 // Called by admin after confirming task submission.
 export async function generateCertificate(applicationId: string) {
     // 1. Fetch the application with user and track
+
     const application = await prisma.application.findUnique({
         where: { id: applicationId },
         include: {
             user: { select: { id: true, fullName: true, email: true } },
-            track: { select: { id: true, name: true } },
-            certificate: true, // Check if one already exists
+            track: { select: { id: true, name: true, code: true } },
+            certificate: true,
         },
     });
 
@@ -89,8 +100,11 @@ export async function generateCertificate(applicationId: string) {
     }
 
     // 4. Generate unique CIN
-    const issuedDate = new Date();
-    const cin = await generateUniqueCIN(issuedDate);
+   const issuedDate = new Date();
+  const cin = await generateSequentialCIN(
+    issuedDate,
+    application.track.code
+  );
 
     // 5. Create certificate record
     const certificate = await prisma.certificate.create({

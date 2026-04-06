@@ -143,12 +143,13 @@ router.post(
 
 // POST /v1/admin/certificates/:cin/activate
 // Activate a certificate (called after email is sent)
+// POST /v1/admin/certificates/activate
 router.post(
-    '/admin/:cin/activate',
-    authenticateAdmin,
-    asyncHandler(async (req: Request, res: Response) => {
-        const { cin } = req.params;
-        const certificate = await activateCertificate(cin);
+  '/admin/activate',
+  authenticateAdmin,
+  asyncHandler(async (req: Request, res: Response) => {
+    const { cin } = z.object({ cin: z.string().min(1) }).parse(req.body);
+    const certificate = await activateCertificate(cin);
 
         res.json({
             success: true,

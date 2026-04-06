@@ -46,7 +46,6 @@ const applySchema = z.object({
 type ApplyFormData = z.infer<typeof applySchema>;
 
 interface SuccessData {
-  applicationId: string;
   trackName: string;
   applicantName: string;
 }
@@ -105,7 +104,6 @@ function ApplyForm() {
         joinedSocials: data.joinedSocials,
       });
       setSuccessData({
-        applicationId: res.data.applicationId,
         trackName: res.data.track.name,
         applicantName: res.data.applicant.name,
       });
@@ -146,14 +144,7 @@ function ApplyForm() {
               </p>
             </div>
 
-            <div className="bg-gray-50 rounded-xl p-4 mb-6 text-center">
-              <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
-                Application Reference
-              </p>
-              <p className="font-mono font-bold text-xl text-gray-900">
-                {successData.applicationId.slice(0, 8).toUpperCase()}
-              </p>
-            </div>
+            {/* Reference removed — students identify by email */}
 
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
               <h2 className="font-bold text-gray-900 mb-1">

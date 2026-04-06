@@ -228,7 +228,7 @@ export const adminCertificatesApi = {
   bulkGenerate: (applicationIds: string[]) =>
     api.post('/certificates/admin/bulk-generate', { applicationIds }),
   activate: (cin: string) =>
-    api.post(`/certificates/admin/${cin}/activate`),
+    api.post(`/certificates/admin/activate`, { cin }),
 };
 
 export const adminAnalyticsApi = {
