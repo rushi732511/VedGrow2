@@ -7,7 +7,12 @@ import { applicationConfirmationTemplate } from '../templates/application-confir
 import { offerLetterTemplate } from '../templates/offer-letter';
 import { taskSubmissionTemplate } from '../templates/task-submission';
 import { certificateIssuedTemplate } from '../templates/certificate-issued';
-
+import { lorIssuedTemplate } from '../templates/lor-issued';
+import {
+  generateOfferLetterPdf,
+  generateCertificatePdf,
+  generateLorPdf,
+} from './pdf.service';
 // Initialize SendGrid with API key
 sgMail.setApiKey(env.SENDGRID_API_KEY);
 
@@ -16,13 +21,22 @@ type TemplateName =
   | 'application-confirmation'
   | 'offer-letter'
   | 'task-submission'
-  | 'certificate-issued';
+  | 'certificate-issued'
+  | 'lor-issued';
+
+interface EmailAttachment {
+  content: string;      // base64 encoded
+  filename: string;
+  type: string;
+  disposition: 'attachment' | 'inline';
+}
 
 interface EmailOptions {
   to: string;
   templateName: TemplateName;
   data: Record<string, unknown>;
-  metadata?: Record<string, unknown>; // stored in email_logs for context
+  metadata?: Record<string, unknown>;
+  attachment?: EmailAttachment;
 }
 
 // ─── renderTemplate ───────────────────────────────────────────────────────────
@@ -48,6 +62,10 @@ function renderTemplate(
       return certificateIssuedTemplate(
         data as Parameters<typeof certificateIssuedTemplate>[0]
       );
+    case 'lor-issued':
+      return lorIssuedTemplate(
+        data as Parameters<typeof lorIssuedTemplate>[0]
+      );
     default:
       throw new Error(`Unknown email template: ${templateName}`);
   }
@@ -56,7 +74,7 @@ function renderTemplate(
 // ─── sendEmail ────────────────────────────────────────────────────────────────
 // Core email sending function. Always logs the attempt regardless of outcome.
 export async function sendEmail(options: EmailOptions): Promise<void> {
-  const { to, templateName, data, metadata } = options;
+  const { to, templateName, data, metadata, attachment } = options;
 
   // 1. Render the template
   const { subject, html } = renderTemplate(templateName, data);
@@ -82,6 +100,7 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
       },
       subject,
       html,
+      ...(attachment && { attachments: [attachment] }),
     });
 
     // 4. Update log to SENT
@@ -179,13 +198,38 @@ export async function sendOfferLetter(
   trackName: string,
   startDate: string,
   endDate: string,
-  batchId: string
+  batchId: string,
+  cin?: string
 ) {
+  // Generate PDF attachment
+  let pdfBuffer: Buffer | null = null;
+  try {
+    const issueDate = new Date().toLocaleDateString('en-IN', {
+      day: 'numeric', month: 'long', year: 'numeric',
+    });
+    pdfBuffer = await generateOfferLetterPdf({
+      fullName,
+      trackName,
+      startDate,
+      endDate,
+      cin: cin ?? `PI-${new Date().toISOString().slice(2,8).replace(/-/g,'')}-OFFER`,
+      issueDate,
+    });
+  } catch (err) {
+    logger.error('Failed to generate offer letter PDF', { error: err });
+  }
+
   await sendEmail({
     to: email,
     templateName: 'offer-letter',
     data: { fullName, trackName, startDate, endDate, batchId },
     metadata: { batchId },
+    attachment: pdfBuffer ? {
+      content: pdfBuffer.toString('base64'),
+      filename: 'Offer_Letter.pdf',
+      type: 'application/pdf',
+      disposition: 'attachment',
+    } : undefined,
   });
 }
 
@@ -205,18 +249,75 @@ export async function sendTaskSubmissionForm(
   });
 }
 
+export async function sendLorEmail(
+  email: string,
+  fullName: string,
+  trackName: string,
+  cin: string,
+  collegeName?: string
+) {
+  // Generate LoR PDF
+  let pdfBuffer: Buffer | null = null;
+  try {
+    const issuedDate = new Date().toLocaleDateString('en-IN', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+    });
+    pdfBuffer = await generateLorPdf({
+      fullName, trackName, cin, issuedDate, collegeName,
+    });
+  } catch (err) {
+    logger.error('Failed to generate LoR PDF', { error: err });
+  }
+
+  await sendEmail({
+    to: email,
+    templateName: 'lor-issued',
+    data: { fullName, trackName, cin },
+    metadata: { cin },
+    attachment: pdfBuffer ? {
+      content: pdfBuffer.toString('base64'),
+      filename: 'Letter_of_Recommendation.pdf',
+      type: 'application/pdf',
+      disposition: 'attachment',
+    } : undefined,
+  });
+}
 export async function sendCertificateEmail(
   email: string,
   fullName: string,
   trackName: string,
   cin: string,
   issuedDate: string,
-  verifyUrl: string
+  verifyUrl: string,
+  startDate?: string,
+  endDate?: string
 ) {
+  // Generate certificate PDF
+  let pdfBuffer: Buffer | null = null;
+  try {
+    pdfBuffer = await generateCertificatePdf({
+      fullName,
+      trackName,
+      startDate: startDate ?? issuedDate,
+      endDate: endDate ?? issuedDate,
+      cin,
+      issuedDate,
+      verifyUrl,
+    });
+  } catch (err) {
+    logger.error('Failed to generate certificate PDF', { error: err });
+  }
+
   await sendEmail({
     to: email,
     templateName: 'certificate-issued',
     data: { fullName, trackName, cin, issuedDate, verifyUrl },
     metadata: { cin },
+    attachment: pdfBuffer ? {
+      content: pdfBuffer.toString('base64'),
+      filename: 'Certificate.pdf',
+      type: 'application/pdf',
+      disposition: 'attachment',
+    } : undefined,
   });
 }

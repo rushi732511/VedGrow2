@@ -4,50 +4,107 @@ export function applicationConfirmationTemplate(data: {
   applicationId: string;
 }) {
   return {
-    subject: `Application Received — ${data.trackName} Internship`,
+    subject: `Thanks for Applying — Prodigy InfoTech ${data.trackName} Internship`,
     html: `
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: #4F46E5; padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
-    <h1 style="color: white; margin: 0; font-size: 24px;">vedgrow </h1>
-    <p style="color: #C7D2FE; margin: 4px 0 0;">Remote Internship Program</p>
-  </div>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f4f4;">
+<table width="100%" cellpadding="0" cellspacing="0">
+<tr><td align="center" style="padding:20px 0;">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;">
 
-  <div style="background: #f9fafb; padding: 32px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
-    <h2 style="color: #111827; margin-top: 0;">Application Received ✅</h2>
+  <!-- Header -->
+  <tr><td style="background:#1a73e8;padding:24px 32px;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="color:#fff;font-size:22px;font-weight:bold;">
+          ⚡ Prodigy InfoTech
+        </td>
+        <td align="right" style="color:#fff;font-size:18px;font-weight:bold;">
+          Application Received
+        </td>
+      </tr>
+    </table>
+  </td></tr>
 
-    <p>Dear <strong>${data.fullName}</strong>,</p>
+  <!-- Body -->
+  <tr><td style="padding:32px;">
+    <p style="font-size:16px;color:#333;margin:0 0 16px;">Dear <strong>${data.fullName}</strong>,</p>
 
-    <p>Thank you for applying to the <strong>${data.trackName}</strong> internship program at vedgrow . We have received your application successfully.</p>
+    <p style="font-size:15px;color:#333;margin:0 0 16px;">
+      Thank you for applying to the <strong>${data.trackName}</strong> internship at Prodigy InfoTech.
+      Your application has been received successfully.
+    </p>
 
-    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; margin: 24px 0;">
-      <p style="margin: 0; font-size: 14px; color: #6b7280;">Application Reference ID</p>
-      <p style="margin: 4px 0 0; font-size: 18px; font-weight: bold; color: #4F46E5; font-family: monospace;">${data.applicationId.slice(0, 8).toUpperCase()}</p>
+    <div style="background:#f8f9fa;border-left:4px solid #1a73e8;padding:16px;border-radius:4px;margin:20px 0;">
+      <p style="margin:0;font-size:13px;color:#666;">Application Reference</p>
+      <p style="margin:4px 0 0;font-size:20px;font-weight:bold;color:#1a73e8;font-family:monospace;">
+        ${data.applicationId.slice(0, 8).toUpperCase()}
+      </p>
     </div>
 
-    <h3 style="color: #111827;">What happens next?</h3>
-    <ol style="padding-left: 20px; color: #374151;">
-      <li style="margin-bottom: 8px;">Complete your ₹129 documentation fee payment (if not done already)</li>
-      <li style="margin-bottom: 8px;">Our team processes applications in batches on the 1st and 15th of each month</li>
-      <li style="margin-bottom: 8px;">You will receive your Offer Letter via email once processed</li>
-      <li style="margin-bottom: 8px;">Complete the internship tasks and submit them via the form we send</li>
-      <li>Receive your verified Certificate of Completion</li>
-    </ol>
-
-    <p style="font-size: 14px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 16px; margin-top: 24px;">
-      Questions? Check our <a href="#" style="color: #4F46E5;">FAQ page</a> or reply to this email.<br>
-      Please check your spam folder if you don't receive further emails from us.
+    <p style="font-size:15px;font-weight:bold;color:#333;margin:24px 0 8px;">
+      Perks of your Internship:
     </p>
-  </div>
+    <ul style="color:#333;font-size:14px;padding-left:20px;margin:0 0 20px;">
+      <li style="margin-bottom:6px;">Offer Letter</li>
+      <li style="margin-bottom:6px;">Industry Experience</li>
+      <li style="margin-bottom:6px;"><strong>Verified Internship Certificate</strong></li>
+      <li style="margin-bottom:6px;">Letter of Recommendation as per performance</li>
+    </ul>
 
-  <p style="text-align: center; font-size: 12px; color: #9ca3af; margin-top: 16px;">
-    © ${new Date().getFullYear()} vedgrow  · support@vedgrow.dev
-  </p>
+    <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:16px;margin:20px 0;">
+      <p style="margin:0;font-size:14px;color:#856404;">
+        <strong>Note:</strong> You can apply for one internship per month. Offer Letters will be 
+        processed in batches on the 1st and 15th of each month.
+      </p>
+    </div>
+
+    <p style="font-size:15px;font-weight:bold;color:#333;margin:24px 0 8px;">
+      Join our Community:
+    </p>
+    <table cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr>
+        <td style="padding-right:12px;">
+          <a href="https://www.linkedin.com/company/prodigy-infotech/" 
+             style="background:#0077b5;color:#fff;padding:8px 16px;border-radius:4px;text-decoration:none;font-size:13px;font-weight:bold;">
+            LinkedIn
+          </a>
+        </td>
+        <td style="padding-right:12px;">
+          <a href="https://t.me/prodigy_infotech"
+             style="background:#0088cc;color:#fff;padding:8px 16px;border-radius:4px;text-decoration:none;font-size:13px;font-weight:bold;">
+            Telegram
+          </a>
+        </td>
+        <td>
+          <a href="https://instagram.com/prodigy_infotech"
+             style="background:#e1306c;color:#fff;padding:8px 16px;border-radius:4px;text-decoration:none;font-size:13px;font-weight:bold;">
+            Instagram
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="font-size:13px;color:#666;border-top:1px solid #eee;padding-top:16px;margin-top:24px;">
+      Please check your spam folder if you don't receive further emails from us.<br>
+      Refer to our <a href="https://prodigyinfotech.dev/#faq" style="color:#1a73e8;">FAQs</a> for common questions.
+    </p>
+  </td></tr>
+
+  <!-- Footer -->
+  <tr><td style="background:#f8f9fa;padding:20px 32px;text-align:center;border-top:1px solid #eee;">
+    <p style="margin:0;font-size:12px;color:#999;">
+      Copyright ©${new Date().getFullYear()} Prodigy InfoTech<br>
+      <a href="https://prodigyinfotech.dev" style="color:#1a73e8;">prodigyinfotech.dev</a> · 
+      <a href="mailto:contact@prodigyinfotech.dev" style="color:#1a73e8;">contact@prodigyinfotech.dev</a>
+    </p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
 </body>
 </html>`,
   };

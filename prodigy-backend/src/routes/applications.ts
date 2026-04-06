@@ -14,7 +14,7 @@ const createApplicationSchema = z.object({
     email: z
         .string()
         .email('Please enter a valid email address')
-        .toLowerCase(), // normalize to lowercase before storing
+        .toLowerCase(),
     phone: z
         .string()
         .regex(
@@ -24,8 +24,15 @@ const createApplicationSchema = z.object({
     trackSlug: z
         .string()
         .min(1, 'Please select an internship track'),
-});
 
+    // Extended profile fields — optional but stored
+    gender: z.enum(['Male', 'Female', 'Other']).optional(),
+    collegeName: z.string().max(200).optional(),
+    highestQualification: z.string().max(100).optional(),
+    passingYear: z.string().optional(),
+    country: z.string().max(100).optional(),
+    joinedSocials: z.boolean().optional(),
+});
 // ─── POST /v1/applications ────────────────────────────────────────────────────
 // Submit a new internship application
 router.post(
@@ -43,8 +50,6 @@ router.post(
             data: {
                 applicationId: application.id,
                 status: application.status,
-                paymentStatus: application.paymentStatus,
-                paymentAmount: 129, // ₹129 (human-readable, not paise)
                 track: application.track,
                 applicant: {
                     name: user.fullName,

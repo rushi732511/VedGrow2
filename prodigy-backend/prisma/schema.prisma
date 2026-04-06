@@ -14,6 +14,14 @@ model User {
   email     String   @unique
   fullName  String
   phone     String
+
+  // Extended profile fields (collected during application)
+  gender              String?
+  collegeName         String?
+  highestQualification String?
+  passingYear         String?
+  country             String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -74,9 +82,9 @@ model Application {
   trackId String
   batchId String?
 
-  // Payment
+  // Payment (kept for backwards compatibility — now managed via TaskSubmission)
   paymentStatus  PaymentStatus @default(PENDING)
-  paymentAmount  Int           @default(12900) // in paise (₹129.00)
+  paymentAmount  Int           @default(0) // ₹0 — payment moved to task submission
   paymentId      String?
   paymentOrderId String?
   paidAt         DateTime?
@@ -87,6 +95,9 @@ model Application {
   taskSubmittedAt    DateTime?
   taskSubmissionData Json?
 
+  // Social confirmation at application time
+  joinedSocials Boolean @default(false)
+
   // Metadata
   applicationMonth DateTime
   status           ApplicationStatus @default(SUBMITTED)
@@ -95,10 +106,11 @@ model Application {
   updatedAt        DateTime          @updatedAt
 
   // Relations
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  track       Track        @relation(fields: [trackId], references: [id], onDelete: Cascade)
-  batch       Batch?       @relation(fields: [batchId], references: [id], onDelete: SetNull)
-  certificate Certificate?
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  track          Track           @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  batch          Batch?          @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  certificate    Certificate?
+  taskSubmission TaskSubmission?
 
   // One application per user per month
   @@unique([userId, applicationMonth])
@@ -135,6 +147,45 @@ model Certificate {
   @@index([userId])
   @@index([issuedDate(sort: Desc)])
   @@map("certificates")
+}
+
+// ─── Task Submissions ─────────────────────────────────────────────────────────
+model TaskSubmission {
+  id            String   @id @default(uuid())
+  applicationId String   @unique
+  userId        String
+
+  // Task links (at least 2 required for certificate, 4 for LoR)
+  task1GithubUrl    String?
+  task1LinkedinUrl  String?
+  task2GithubUrl    String?
+  task2LinkedinUrl  String?
+  task3GithubUrl    String?
+  task3LinkedinUrl  String?
+  task4GithubUrl    String?
+  task4LinkedinUrl  String?
+
+  // Payment
+  paymentStatus  PaymentStatus @default(PENDING)
+  paymentAmount  Int           @default(12900) // ₹129 in paise
+  paymentId      String?
+  paymentOrderId String?
+  paidAt         DateTime?
+
+  // Eligibility
+  tasksCompleted   Int     @default(0)  // counted by admin/system
+  eligibleForLor   Boolean @default(false) // true if 4+ tasks
+  eligibleForCert  Boolean @default(false) // true if 2+ tasks
+
+  submittedAt DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([userId])
+  @@index([paymentStatus])
+  @@map("task_submissions")
 }
 
 // ─── Email Logs ───────────────────────────────────────────────────────────────

@@ -131,15 +131,9 @@ router.post(
 // ─── POST /v1/admin/batches/:id/task-forms ────────────────────────────────────
 // Sends task submission form emails to eligible applicants in the batch
 router.post(
-    '/:id/task-forms',
-    asyncHandler(async (req: Request, res: Response) => {
-        const { submissionFormUrl } = z
-            .object({
-                submissionFormUrl: z.string().url('Must be a valid URL'),
-            })
-            .parse(req.body);
-
-        const result = await sendTaskForms(req.params.id, submissionFormUrl);
+  '/:id/task-forms',
+  asyncHandler(async (req: Request, res: Response) => {
+    const result = await sendTaskForms(req.params.id);
 
         res.json({
             success: true,

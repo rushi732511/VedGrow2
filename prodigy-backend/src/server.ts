@@ -11,11 +11,13 @@ import adminBatchesRouter from './routes/admin/batches';
 import adminApplicationsRouter from './routes/admin/applications';
 import adminAnalyticsRouter from './routes/admin/analytics';
 import adminEmailsRouter from './routes/admin/emails';
+import adminLorRouter from './routes/admin/lor';
 import certificatesRouter from './routes/certificates';
 import contactRouter from './routes/contact';
 import tracksRouter from './routes/tracks';
 import applicationsRouter from './routes/applications';
 import paymentsRouter from './routes/payments';
+import taskSubmissionRouter from './routes/taskSubmission';
 // ─── Create Express App ───────────────────────────────────────────────────────
 const app: Application = express();
 
@@ -128,11 +130,13 @@ app.use('/v1/admin/batches', adminBatchesRouter);
 app.use('/v1/admin/applications', adminApplicationsRouter);
 app.use('/v1/admin/analytics', adminAnalyticsRouter);
 app.use('/v1/admin/emails', adminEmailsRouter);
+app.use('/v1/admin/lor', adminLorRouter);
 app.use('/v1/certificates', certificatesRouter);
 app.use('/v1/contact', contactRouter);
 app.use('/v1/tracks', tracksRouter);
 app.use('/v1/applications', applicationsRouter);
 app.use('/v1', paymentsRouter);
+app.use('/v1/task-submission', taskSubmissionRouter);
 // ─── 404 Handler ──────────────────────────────────────────────────────────────
 // Catches any request that didn't match a route above
 app.use((_req: Request, res: Response) => {

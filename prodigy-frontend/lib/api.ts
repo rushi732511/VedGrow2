@@ -115,7 +115,21 @@ export const applicationsApi = {
     email: string;
     phone: string;
     trackSlug: string;
-  }) => api.post<{ success: true; data: { applicationId: string; status: string; paymentAmount: number; track: { name: string; slug: string } } }>('/applications', data),
+    gender?: string;
+    collegeName?: string;
+    highestQualification?: string;
+    passingYear?: string;
+    country?: string;
+    joinedSocials?: boolean;
+  }) => api.post<{
+    success: true;
+    data: {
+      applicationId: string;
+      status: string;
+      track: { name: string; slug: string };
+      applicant: { name: string; email: string };
+    };
+  }>('/applications', data),
 
   createPaymentOrder: (applicationId: string) =>
     api.post<{ success: true; data: { orderId: string; amount: number; currency: string; keyId: string; prefill: { name: string; email: string } } }>(
@@ -196,8 +210,8 @@ export const adminBatchesApi = {
     api.post(`/admin/batches/${id}/assign`, { applicationIds }),
   sendOfferLetters: (id: string) =>
     api.post(`/admin/batches/${id}/offer-letters`),
-  sendTaskForms: (id: string, submissionFormUrl: string) =>
-    api.post(`/admin/batches/${id}/task-forms`, { submissionFormUrl }),
+  sendTaskForms: (id: string) =>
+    api.post(`/admin/batches/${id}/task-forms`),
 };
 
 export const adminCertificatesApi = {
@@ -225,13 +239,64 @@ export const adminAnalyticsApi = {
       '/admin/analytics/funnel'
     ),
 };
-
+export const adminLorApi = {
+  getEligible: () =>
+    api.get<{ success: true; data: { applications: Application[] }; meta: { total: number } }>(
+      '/admin/lor/eligible'
+    ),
+  send: (applicationId: string) =>
+    api.post(`/admin/lor/${applicationId}/send`),
+};
 export const adminEmailsApi = {
   list: (params?: Record<string, string | number>) =>
     api.get<{ success: true; data: { logs: EmailLog[] }; meta: { total: number; totalPages: number } }>(
       '/admin/emails',
       { params }
     ),
+};
+
+export const taskSubmissionApi = {
+  submit: (data: {
+    applicationId: string;
+    task1GithubUrl?: string;
+    task1LinkedinUrl?: string;
+    task2GithubUrl?: string;
+    task2LinkedinUrl?: string;
+    task3GithubUrl?: string;
+    task3LinkedinUrl?: string;
+    task4GithubUrl?: string;
+    task4LinkedinUrl?: string;
+  }) => api.post<{
+    success: true;
+    data: {
+      taskSubmissionId: string;
+      tasksCompleted: number;
+      eligibleForCert: boolean;
+      eligibleForLor: boolean;
+      payment: {
+        orderId: string;
+        amount: number;
+        currency: string;
+        keyId: string;
+        prefill: { name: string; email: string };
+      };
+    };
+  }>('/task-submission', data),
+
+  verifyPayment: (data: {
+    applicationId: string;
+    razorpayOrderId: string;
+    razorpayPaymentId: string;
+    razorpaySignature: string;
+  }) => api.post<{
+    success: true;
+    data: {
+      message: string;
+      tasksCompleted: number;
+      eligibleForCert: boolean;
+      eligibleForLor: boolean;
+    };
+  }>('/task-submission/verify-payment', data),
 };
 
 export const adminContactsApi = {

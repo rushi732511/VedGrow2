@@ -138,13 +138,12 @@ export default function BatchesPage() {
 
   // ── Send task forms ────────────────────────────────────────────────────────
   async function handleSendTaskForms() {
-    if (!taskFormModal || !taskFormUrl) return;
+    if (!taskFormModal) return;
 
     setActionLoading(taskFormModal.batchId + 'tasks');
     try {
       const { data } = await adminBatchesApi.sendTaskForms(
-        taskFormModal.batchId,
-        taskFormUrl
+        taskFormModal.batchId
       );
       const result = data.data as { sent: number; failed: number };
       showSuccess(`Task forms: ${result.sent} sent, ${result.failed} failed.`);
@@ -345,30 +344,29 @@ export default function BatchesPage() {
       {taskFormModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
-            <h3 className="font-semibold text-gray-900 mb-1">
-              Send Task Submission Form
-            </h3>
-            <p className="text-sm text-gray-500 mb-4">
-              {taskFormModal.batchName} batch
+          <h3 className="font-semibold text-gray-900 mb-1">
+            Send Task Submission Form
+          </h3>
+          <p className="text-sm text-gray-500 mb-4">
+            {taskFormModal.batchName} batch
+          </p>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+            <p className="text-sm text-blue-800">
+              Each student will receive a personalized link to:
             </p>
+            <p className="text-xs font-mono text-blue-700 mt-1 break-all">
+              /submit?applicationId=[their-unique-id]
+            </p>
+          </div>
 
-            <Input
-              label="Google Form URL"
-              type="url"
-              placeholder="https://forms.google.com/..."
-              value={taskFormUrl}
-              onChange={(e) => setTaskFormUrl(e.target.value)}
-              hint="This link will be included in the email sent to all enrolled applicants"
-            />
-
-            <div className="flex gap-3 mt-4">
-              <Button
-                onClick={handleSendTaskForms}
-                isLoading={actionLoading === taskFormModal.batchId + 'tasks'}
-                disabled={!taskFormUrl}
-              >
-                Send Emails
-              </Button>
+          <div className="flex gap-3 mt-4">
+            <Button
+              onClick={handleSendTaskForms}
+              isLoading={actionLoading === taskFormModal.batchId + 'tasks'}
+            >
+              Send Emails
+            </Button>
               <Button
                 variant="secondary"
                 onClick={() => { setTaskFormModal(null); setTaskFormUrl(''); }}

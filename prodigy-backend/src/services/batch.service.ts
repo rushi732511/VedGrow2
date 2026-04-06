@@ -174,19 +174,19 @@ export async function assignApplicationsToBatch(
     await prisma.$transaction(async (tx) => {
         // Assign all applications to this batch
         // Assign applications to batch
-    const updateResult = await tx.application.updateMany({
-      where: { id: { in: applicationIds } },
-      data: {
-        batchId,
-        status: 'ENROLLED',
-      },
-    });
+        const updateResult = await tx.application.updateMany({
+            where: { id: { in: applicationIds } },
+            data: {
+                batchId,
+                status: 'ENROLLED',
+            },
+        });
 
-    // Increment by actual number updated — not the requested count
-    await tx.batch.update({
-      where: { id: batchId },
-      data: { currentCount: { increment: updateResult.count } },
-    });
+        // Increment by actual number updated — not the requested count
+        await tx.batch.update({
+            where: { id: batchId },
+            data: { currentCount: { increment: updateResult.count } },
+        });
     });
 
     logger.info('Applications assigned to batch', {
@@ -262,10 +262,7 @@ export async function sendOfferLetters(batchId: string) {
 // ─── sendTaskForms ────────────────────────────────────────────────────────────
 // Sends task submission form emails to enrolled applicants
 // who haven't received one yet.
-export async function sendTaskForms(
-    batchId: string,
-    submissionFormUrl: string
-) {
+export async function sendTaskForms(batchId: string) {
     const batch = await prisma.batch.findUnique({
         where: { id: batchId },
         include: {
@@ -299,11 +296,14 @@ export async function sendTaskForms(
 
     for (const application of batch.applications) {
         try {
+            // Generate the platform task submission URL for this specific application
+            const submissionUrl = `${env.FRONTEND_URL}/submit?applicationId=${application.id}`;
+
             await sendTaskSubmissionForm(
                 application.user.email,
                 application.user.fullName,
                 batch.track.name,
-                submissionFormUrl,
+                submissionUrl,
                 deadline,
                 application.id
             );
